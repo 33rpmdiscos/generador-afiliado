@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de URLs de Afiliado</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 50px;
+        }
+        input, button {
+            margin: 10px;
+            padding: 10px;
+            font-size: 16px;
+            width: 80%;
+        }
+        #resultado {
+            margin-top: 20px;
+            font-weight: bold;
+            color: green;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+    <h1>Generador de URLs de Afiliado de Amazon</h1>
+    <p>Pega la URL del producto de Amazon:</p>
+    <input type="text" id="urlOriginal" placeholder="Pega aquí la URL" />
+    <button onclick="generarURL()">Generar URL de Afiliado</button>
+    <p id="resultado"></p>
+
+    <script>
+        function generarURL() {
+            const urlOriginal = document.getElementById("urlOriginal").value;
+            const idAfiliado = "33rpmdiscos-21"; // Código de afiliado actualizado
+            if (!urlOriginal.includes("amazon")) {
+                document.getElementById("resultado").innerText = "Por favor, introduce una URL válida de Amazon.";
+                return;
+            }
+            const urlAfiliada = urlOriginal.includes("?") 
+                ? `${urlOriginal}&tag=${idAfiliado}` 
+                : `${urlOriginal}?tag=${idAfiliado}`;
+            document.getElementById("resultado").innerHTML = `URL generada: <a href="${urlAfiliada}" target="_blank">${urlAfiliada}</a>`;
+        }
+    </script>
+</body>
+</html>
