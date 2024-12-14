@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de URLs de Afiliado</title>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        input, button {
+            padding: 10px;
+            margin: 5px 0;
+            width: 100%;
+        }
+        h3 {
+            margin-top: 30px;
+        }
+        .history, .admin-section {
+            margin-top: 30px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        button {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Generador de URLs de Afiliado de Amazon</h1>
+    
+    <!-- Generador de URL -->
+    <div id="generator">
+        <input type="text" id="productUrl" placeholder="Introduce la URL de Amazon">
+        <button onclick="generateAffiliateUrl()">Generar URL de Afiliado</button>
+        <div id="generatedUrl"></div>
+    </div>
+
+    <!-- Historial de URLs del usuario -->
+    <div class="history">
+        <h3>Historial:</h3>
+        <div id="history"></div>
+    </div>
+
+    <!-- Panel de administración -->
+    <div class="admin-section">
+        <h3>Panel de Administración</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Usuario</th>
+                    <th>URL</th>
+                    <th>Estado</th>
+                    <th>Ganancia (€)</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="adminTable"></tbody>
+        </table>
+    </div>
+
+    <script>
+        // Configuración de Firebase
+        const firebaseConfig = {
+            apiKey: AIzaSyDQZqz5WGLbYr1Q-5PgZ6WusS6w20rfHJI",
+            authDomain: "generadorurlafiliado.firebaseapp.com",
+            projectId: "generadorurlafiliado",
+            storageBucket: "generadorurlafiliado.firebasestorage.app",
+            messagingSenderId: "221115260540",
+            appId: "1:221115260540:web:73b81a1ffa522ade7e73f9"
+        };
+
+	 // Initialize Firebase
+ 	 const app = initializeApp(firebaseConfig);
+	</script>
+
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        const affiliateId = "33rpmdiscos-21"; // ID de afiliado de Amazon
+
+        // Función para generar una URL de afiliado
+        function generateAffiliateUrl() {
+            const inputUrl = document.getElementById('productUrl').value;
+            if (!inputUrl.includes("amazon.")) {
+                alert("Por favor, introduce una URL válida de Amazon.");
+                return;
+            }
+
+            // Agregar ID de afiliado
+            const url = new URL(inputUrl);
+            url.searchParams.set("tag", affiliateId);
+
+            const userId = "demo-user"; // Este ID se obtiene con autenticación, aquí es estático para pruebas
+            const generatedUrl = url.toString();
+
+            // Guardar en Firebase
+            const urlId = db.ref(users/${userId}/urls).push().key;
+            db.ref(users/${userId}/urls/${urlId}).set({
+                url: generatedUrl,
+                compraValidada: false,
+                ganancia: null
+            });
+
+            document.getElementById('generatedUrl').innerHTML = `
+                <p>URL generada: <a href="${generatedUrl}" target="_blank">${generatedUrl}</a></p>
+            `;
+
+            cargarHistorial(userId);
+        }
+
+        // Función para cargar el historial de URLs de un usuario
+        function cargarHistorial(userId) {
+            db.ref(users/${userId}/urls).once('value', snapshot => {
+                const historyDiv = document.getElementById('history');
+                historyDiv.innerHTML = '';
+
+                snapshot.forEach(childSnapshot => {
+                    const data = childSnapshot.val();
+                    const estado = data.compraValidada ? "Validada" : "Pendiente";
+                    const ganancia = data.ganancia ? Ganancia: ${data.ganancia} € : "Ganancia: -";
+
+                    const item = document.createElement('div');
+                    item.innerHTML = `
+                        <p>
+                            <a href="${data.url}" target="_blank">${data.url}</a><br>
+                            Estado: ${estado} <br>
+                            ${ganancia}
+                        </p>`;
+                    historyDiv.appendChild(item);
+                });
+            });
+        }
+
+        // Funciones de administración
+        function cargarDatosAdmin() {
+            db.ref('users').once('value', snapshot => {
+                const adminTable = document.getElementById('adminTable');
+                adminTable.innerHTML = '';
+
+                snapshot.forEach(userSnapshot => {
+                    const userId = userSnapshot.key;
+                    const userUrls = userSnapshot.val().urls;
+
+                    for (const urlId in userUrls) {
+                        const data = userUrls[urlId];
+                        const estado = data.compraValidada ? "Validada" : "Pendiente";
+                        const ganancia = data.ganancia ? data.ganancia : 0;
+
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${userId}</td>
+                            <td><a href="${data.url}" target="_blank">${data.url}</a></td>
+                            <td>${estado}</td>
+                            <td>${ganancia}</td>
+                            <td>
+                                <button onclick="validarCompra('${userId}', '${urlId}')">Validar</button>
+                                <button onclick="asignarGanancia('${userId}', '${urlId}')">Añadir Ganancia</button>
+                            </td>
+                        `;
+                        adminTable.appendChild(row);
+                    }
+                });
+            });
+        }
+
+        function validarCompra(userId, urlId) {
+            db.ref(users/${userId}/urls/${urlId}).update({ compraValidada: true })
+                .then(() => alert('Compra validada'))
+                .then(cargarDatosAdmin);
+        }
+
+        function asignarGanancia(userId, urlId) {
+            const ganancia = prompt("Introduce la ganancia (€):");
+            if (ganancia && !isNaN(ganancia)) {
+                db.ref(users/${userId}/urls/${urlId}).update({ ganancia: parseFloat(ganancia) })
+                    .then(() => alert('Ganancia añadida'))
+                    .then(cargarDatosAdmin);
+            } else {
+                alert("Por favor, introduce un número válido.");
+            }
+        }
+
+        // Cargar historial y datos de administración al inicio
+        const userId = "demo-user"; // Este es un ID de prueba; se sustituye con autenticación
+        cargarHistorial(userId);
+        cargarDatosAdmin();
+    </script>
+</body>
+</html>
