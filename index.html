@@ -72,24 +72,21 @@
     </div>
 
     <script>
-        // Configuración de Firebase
+        // Configuración de Firebase (reemplaza con tus datos)
         const firebaseConfig = {
-            apiKey: AIzaSyDQZqz5WGLbYr1Q-5PgZ6WusS6w20rfHJI",
-            authDomain: "generadorurlafiliado.firebaseapp.com",
-            projectId: "generadorurlafiliado",
-            storageBucket: "generadorurlafiliado.firebasestorage.app",
-            messagingSenderId: "221115260540",
-            appId: "1:221115260540:web:73b81a1ffa522ade7e73f9"
+            apiKey: "TU_API_KEY",
+            authDomain: "TU_AUTH_DOMAIN",
+            databaseURL: "TU_DATABASE_URL",
+            projectId: "TU_PROJECT_ID",
+            storageBucket: "TU_STORAGE_BUCKET",
+            messagingSenderId: "TU_MESSAGING_SENDER_ID",
+            appId: "TU_APP_ID"
         };
 
-	 // Initialize Firebase
- 	 const app = initializeApp(firebaseConfig);
-	</script>
-
+        // Inicialización de Firebase
         const app = firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-
-        const affiliateId = "33rpmdiscos-21"; // ID de afiliado de Amazon
+        const affiliateId = "tu-codigo-de-afiliado"; // Coloca tu ID de afiliado de Amazon aquí
 
         // Función para generar una URL de afiliado
         function generateAffiliateUrl() {
@@ -107,8 +104,8 @@
             const generatedUrl = url.toString();
 
             // Guardar en Firebase
-            const urlId = db.ref(users/${userId}/urls).push().key;
-            db.ref(users/${userId}/urls/${urlId}).set({
+            const urlId = db.ref(`users/${userId}/urls`).push().key;
+            db.ref(`users/${userId}/urls/${urlId}`).set({
                 url: generatedUrl,
                 compraValidada: false,
                 ganancia: null
@@ -123,14 +120,14 @@
 
         // Función para cargar el historial de URLs de un usuario
         function cargarHistorial(userId) {
-            db.ref(users/${userId}/urls).once('value', snapshot => {
+            db.ref(`users/${userId}/urls`).once('value', snapshot => {
                 const historyDiv = document.getElementById('history');
                 historyDiv.innerHTML = '';
 
                 snapshot.forEach(childSnapshot => {
                     const data = childSnapshot.val();
                     const estado = data.compraValidada ? "Validada" : "Pendiente";
-                    const ganancia = data.ganancia ? Ganancia: ${data.ganancia} € : "Ganancia: -";
+                    const ganancia = data.ganancia ? `Ganancia: ${data.ganancia} €` : "Ganancia: -";
 
                     const item = document.createElement('div');
                     item.innerHTML = `
@@ -177,7 +174,7 @@
         }
 
         function validarCompra(userId, urlId) {
-            db.ref(users/${userId}/urls/${urlId}).update({ compraValidada: true })
+            db.ref(`users/${userId}/urls/${urlId}`).update({ compraValidada: true })
                 .then(() => alert('Compra validada'))
                 .then(cargarDatosAdmin);
         }
@@ -185,7 +182,7 @@
         function asignarGanancia(userId, urlId) {
             const ganancia = prompt("Introduce la ganancia (€):");
             if (ganancia && !isNaN(ganancia)) {
-                db.ref(users/${userId}/urls/${urlId}).update({ ganancia: parseFloat(ganancia) })
+                db.ref(`users/${userId}/urls/${urlId}`).update({ ganancia: parseFloat(ganancia) })
                     .then(() => alert('Ganancia añadida'))
                     .then(cargarDatosAdmin);
             } else {
